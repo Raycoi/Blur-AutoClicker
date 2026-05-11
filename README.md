@@ -113,7 +113,7 @@ You can also support the project by starring the repository and sharing it with 
 
 ## License
 
-This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html#license-text).
+This project is licensed under the [GNU General Public](LICENSE.md).
 
 ## Other Info
 1. Windows has a limit of around 500 CPS for mouse events. This is because Windows timer resolution is limited to about 1ms at minimum (1000cps) but windows also needs to do other things, so the practical limit is around 800cps, but since I can not guarantee that performance on every computer, I set the limit to 500cps.
