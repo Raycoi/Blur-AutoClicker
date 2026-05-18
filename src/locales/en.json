@@ -159,6 +159,8 @@
     "customStopZoneDescription": "Stops the clicker when the cursor enters this rectangular area, using absolute screen coordinates that can span multiple monitors.",
     "customStopZoneSetTopLeft": "Set Top-Left",
     "customStopZoneSetBottomRight": "Set Bottom-Right",
+    "customStopZoneDraw": "Draw Zone",
+    "customStopZoneCancelDrawing": "Cancel Drawing",
     "speedVariationUnavailable": "Enable Speed Variation to edit how much the app randomizes your click timing.",
     "doubleClickUnavailable": "Double Click is unavailable at {cps} clicks/sec. Lower the effective click rate below 50 clicks/sec to turn it on.",
     "clickLimitUnavailable": "Enable Click Limit to stop automatically after a set number of clicks.",

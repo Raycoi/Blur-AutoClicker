@@ -159,6 +159,8 @@
     "customStopZoneDescription": "Detiene el clicker cuando el cursor entra en esta zona rectangular usando coordenadas absolutas que pueden abarcar varios monitores.",
     "customStopZoneSetTopLeft": "Definir esquina sup. izq.",
     "customStopZoneSetBottomRight": "Definir esquina inf. der.",
+    "customStopZoneDraw": "Dibujar zona",
+    "customStopZoneCancelDrawing": "Cancelar dibujo",
     "speedVariationUnavailable": "Activa la variación de velocidad para editar cuánto aleatoriza la app el tiempo de clic.",
     "doubleClickUnavailable": "El doble clic no está disponible a {cps} clics/seg. Reduce la tasa de clics efectiva a menos de 50 clics/seg para activarlo.",
     "clickLimitUnavailable": "Activa el límite de clics para detenerse automáticamente después de un número determinado de clics.",

@@ -9,6 +9,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 static LAST_ZONE_SHOW: Mutex<Option<Instant>> = Mutex::new(None);
 static SEQUENCE_PICK_OVERLAY_ACTIVE: AtomicBool = AtomicBool::new(false);
+static CUSTOM_STOP_ZONE_PICK_OVERLAY_ACTIVE: AtomicBool = AtomicBool::new(false);
 pub static OVERLAY_THREAD_RUNNING: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(true);
 
@@ -205,6 +206,67 @@ pub fn set_sequence_pick_mode(app: &AppHandle, active: bool) -> Result<(), Strin
     Ok(())
 }
 
+pub fn show_custom_stop_zone_pick_overlay(app: &AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("overlay")
+        .ok_or_else(|| "Overlay window not found".to_string())?;
+    let bounds = current_virtual_screen_rect()
+        .ok_or_else(|| "Virtual screen bounds not available".to_string())?;
+
+    #[cfg(target_os = "windows")]
+    {
+        sync_overlay_bounds(&window)?;
+        show_overlay_window(&window)?;
+    }
+
+    CUSTOM_STOP_ZONE_PICK_OVERLAY_ACTIVE.store(true, Ordering::SeqCst);
+    show_overlay(app)?;
+    set_custom_stop_zone_pick_mode(app, true)?;
+
+    if let Some((x, y)) = current_cursor_position() {
+        let offset = VirtualScreenRect::new(x, y, 1, 1).offset_from(bounds);
+        let _ = window.emit(
+            "custom-stop-zone-preview",
+            serde_json::json!({
+                "cursorX": offset.left,
+                "cursorY": offset.top,
+            }),
+        );
+    }
+
+    Ok(())
+}
+
+pub fn set_custom_stop_zone_pick_mode(app: &AppHandle, active: bool) -> Result<(), String> {
+    CUSTOM_STOP_ZONE_PICK_OVERLAY_ACTIVE.store(active, Ordering::SeqCst);
+    if let Some(window) = app.get_webview_window("overlay") {
+        let _ = window.emit(
+            "custom-stop-zone-pick-mode",
+            serde_json::json!({
+                "active": active,
+            }),
+        );
+    }
+    Ok(())
+}
+
+pub fn hide_custom_stop_zone_pick_overlay(app: &AppHandle) -> Result<(), String> {
+    set_custom_stop_zone_pick_mode(app, false)?;
+    if let Some(window) = app.get_webview_window("overlay") {
+        let _ = window.emit("custom-stop-zone-clear-preview", ());
+        hide_overlay_window(&window);
+    }
+    Ok(())
+}
+
+pub fn end_custom_stop_zone_pick_overlay(app: &AppHandle) -> Result<(), String> {
+    set_custom_stop_zone_pick_mode(app, false)?;
+    if let Some(window) = app.get_webview_window("overlay") {
+        let _ = window.emit("custom-stop-zone-clear-preview", ());
+    }
+    Ok(())
+}
+
 fn emit_sequence_points(
     window: &tauri::WebviewWindow,
     bounds: VirtualScreenRect,
@@ -237,7 +299,9 @@ fn emit_sequence_points(
 // ---- Background timer ----
 
 pub fn check_auto_hide(app: &AppHandle) {
-    if SEQUENCE_PICK_OVERLAY_ACTIVE.load(Ordering::SeqCst) {
+    if SEQUENCE_PICK_OVERLAY_ACTIVE.load(Ordering::SeqCst)
+        || CUSTOM_STOP_ZONE_PICK_OVERLAY_ACTIVE.load(Ordering::SeqCst)
+    {
         return;
     }
 
@@ -264,6 +328,7 @@ pub fn check_auto_hide(app: &AppHandle) {
 pub fn hide_overlay(app: AppHandle) -> Result<(), String> {
     *LAST_ZONE_SHOW.lock().unwrap() = None;
     SEQUENCE_PICK_OVERLAY_ACTIVE.store(false, Ordering::SeqCst);
+    CUSTOM_STOP_ZONE_PICK_OVERLAY_ACTIVE.store(false, Ordering::SeqCst);
     if let Some(window) = app.get_webview_window("overlay") {
         hide_overlay_window(&window);
     }

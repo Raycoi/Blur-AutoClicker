@@ -174,6 +174,17 @@ pub fn cancel_sequence_point_pick(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn start_custom_stop_zone_pick(app: AppHandle) -> Result<(), String> {
+    crate::custom_stop_zone_picker::start_custom_stop_zone_pick_inner(app)
+}
+
+#[tauri::command]
+pub fn cancel_custom_stop_zone_pick(app: AppHandle) -> Result<(), String> {
+    crate::custom_stop_zone_picker::cancel_custom_stop_zone_pick_inner(&app);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn get_app_info(app: AppHandle) -> Result<AppInfoPayload, String> {
     let version = app.package_info().version.to_string();
     Ok(AppInfoPayload {

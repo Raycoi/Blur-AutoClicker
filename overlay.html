@@ -59,7 +59,7 @@
             box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.28), 0 6px 18px rgba(0, 0, 0, 0.35);
             pointer-events: none;
         }
-        #pick-prompt {
+        .overlay-prompt {
             position: absolute;
             max-width: 260px;
             padding: 9px 11px;
@@ -74,14 +74,19 @@
             transform: translate(18px, 18px);
             transition: opacity 120ms ease;
         }
-        #pick-prompt.active {
+        .overlay-prompt.active {
             opacity: 1;
         }
-        #pick-prompt span {
+        .overlay-prompt span {
             display: block;
             color: rgba(255, 255, 255, 0.66);
             font-weight: 500;
             margin-top: 3px;
+        }
+        .zone-drawing-preview {
+            background: rgba(34, 197, 94, 0.14);
+            border-color: rgba(34, 197, 94, 0.95);
+            border-style: dashed;
         }
         @keyframes fadeOut {
             0% { opacity: 1; }
@@ -97,10 +102,15 @@
     <div id="overlay-container">
         <div id="zone-layer" class="overlay-layer"></div>
         <div id="sequence-layer" class="overlay-layer"></div>
-        <div id="pick-prompt">
+        <div id="pick-prompt" class="overlay-prompt">
             Right click to add point.
             <span>Shift + right click to add multiple.</span>
             <span>Ctrl + right click to delete a point.</span>
+            <span>Esc to cancel.</span>
+        </div>
+        <div id="stop-zone-prompt" class="overlay-prompt">
+            Right click and drag to draw stop zone.
+            <span>Release to save.</span>
             <span>Esc to cancel.</span>
         </div>
     </div>
@@ -109,7 +119,9 @@
         const zoneLayer = document.getElementById('zone-layer');
         const sequenceLayer = document.getElementById('sequence-layer');
         const pickPrompt = document.getElementById('pick-prompt');
+        const stopZonePrompt = document.getElementById('stop-zone-prompt');
         let pickModeActive = false;
+        let stopZonePickModeActive = false;
 
         function setupTauriListener() {
             if (!window.__TAURI__ || !window.__TAURI__.event) {
@@ -139,6 +151,18 @@
                 updatePickPrompt(event.payload);
             });
 
+            window.__TAURI__.event.listen('custom-stop-zone-pick-mode', (event) => {
+                setStopZonePickMode(Boolean(event.payload && event.payload.active));
+            });
+
+            window.__TAURI__.event.listen('custom-stop-zone-preview', (event) => {
+                renderStopZonePreview(event.payload);
+            });
+
+            window.__TAURI__.event.listen('custom-stop-zone-clear-preview', () => {
+                clearStopZonePreview();
+            });
+
             console.log('[Overlay] Event listeners registered');
         }
 
@@ -146,7 +170,9 @@
             zoneLayer.innerHTML = '';
             zoneLayer.classList.remove('fade-out');
             void zoneLayer.offsetWidth;
-            zoneLayer.classList.add('fade-out');
+            if (!stopZonePickModeActive) {
+                zoneLayer.classList.add('fade-out');
+            }
 
             if (!data) return;
 
@@ -245,7 +271,7 @@
             w = w / scale;
             h = h / scale;
             
-            if (w <= 0 || h <= 0) return;
+            if (w <= 0 || h <= 0) return null;
             const div = document.createElement('div');
             div.className = 'zone ' + cls;
             div.style.left = x + 'px';
@@ -253,6 +279,33 @@
             div.style.width = w + 'px';
             div.style.height = h + 'px';
             zoneLayer.appendChild(div);
+            return div;
+        }
+
+        function renderStopZonePreview(data) {
+            if (!data || !stopZonePickModeActive) return;
+
+            if (
+                Number.isFinite(data.x) &&
+                Number.isFinite(data.y) &&
+                Number.isFinite(data.width) &&
+                Number.isFinite(data.height)
+            ) {
+                const existing = document.getElementById('stop-zone-preview');
+                if (existing) existing.remove();
+                const preview = addZone(data.x, data.y, data.width, data.height, 'zone-drawing-preview');
+                if (preview) preview.id = 'stop-zone-preview';
+            }
+
+            if (Number.isFinite(data.cursorX) && Number.isFinite(data.cursorY)) {
+                updateFloatingPrompt(stopZonePrompt, data.cursorX, data.cursorY);
+            }
+        }
+
+        function clearStopZonePreview() {
+            const existing = document.getElementById('stop-zone-preview');
+            if (existing) existing.remove();
+            stopZonePrompt.classList.remove('active');
         }
 
         function renderSequencePoints(data) {
@@ -302,18 +355,32 @@
             }
         }
 
+        function setStopZonePickMode(active) {
+            stopZonePickModeActive = active;
+            stopZonePrompt.classList.toggle('active', active);
+            if (active) {
+                zoneLayer.classList.remove('fade-out');
+            } else {
+                clearStopZonePreview();
+            }
+        }
+
         function updatePickPrompt(point) {
             if (!point || !pickModeActive) return;
 
+            updateFloatingPrompt(pickPrompt, point.x, point.y);
+        }
+
+        function updateFloatingPrompt(prompt, rawX, rawY) {
             const scale = window.devicePixelRatio || 1;
             const gap = 18;
-            const x = point.x / scale + gap;
-            const y = point.y / scale + gap;
-            const maxX = Math.max(0, window.innerWidth - pickPrompt.offsetWidth - 8);
-            const maxY = Math.max(0, window.innerHeight - pickPrompt.offsetHeight - 8);
+            const x = rawX / scale + gap;
+            const y = rawY / scale + gap;
+            const maxX = Math.max(0, window.innerWidth - prompt.offsetWidth - 8);
+            const maxY = Math.max(0, window.innerHeight - prompt.offsetHeight - 8);
 
-            pickPrompt.style.left = Math.min(Math.max(8, x), maxX) + 'px';
-            pickPrompt.style.top = Math.min(Math.max(8, y), maxY) + 'px';
+            prompt.style.left = Math.min(Math.max(8, x), maxX) + 'px';
+            prompt.style.top = Math.min(Math.max(8, y), maxY) + 'px';
         }
 
         if (document.readyState === 'loading') {

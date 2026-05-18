@@ -159,6 +159,8 @@
     "customStopZoneDescription": "Arrête le clicker lorsque le curseur entre dans cette zone rectangulaire, avec des coordonnées absolues pouvant couvrir plusieurs écrans.",
     "customStopZoneSetTopLeft": "Définir haut-gauche",
     "customStopZoneSetBottomRight": "Définir bas-droite",
+    "customStopZoneDraw": "Dessiner la zone",
+    "customStopZoneCancelDrawing": "Annuler le dessin",
     "speedVariationUnavailable": "Activez la variation de vitesse pour modifier la mesure dans laquelle l'application randomise le timing de vos clics.",
     "doubleClickUnavailable": "Le double clic n'est pas disponible à {cps} clics/sec. Abaissez le taux de clic effectif en dessous de 50 clics/sec pour l'activer.",
     "clickLimitUnavailable": "Activez la limite de clics pour vous arrêter automatiquement après un nombre défini de clics.",

@@ -159,6 +159,8 @@
     "customStopZoneDescription": "يوقف النقر عندما يدخل المؤشر هذه المنطقة المستطيلة، باستخدام إحداثيات الشاشة المطلقة التي يمكن أن تمتد عبر شاشات متعددة.",
     "customStopZoneSetTopLeft": "تعيين أعلى اليسار",
     "customStopZoneSetBottomRight": "تعيين أسفل اليمين",
+    "customStopZoneDraw": "رسم المنطقة",
+    "customStopZoneCancelDrawing": "إلغاء الرسم",
     "speedVariationUnavailable": "قم بتفعيل تباين السرعة لتعديل مقدار العشوائية في توقيت النقر.",
     "doubleClickUnavailable": "النقر المزدوج غير متوفر عند {cps} نقرة/ثانية. قلل معدل النقر الفعلي إلى أقل من 50 نقرة/ثانية لتشغيله.",
     "clickLimitUnavailable": "قم بتفعيل حد النقر للتوقف تلقائياً بعد عدد محدد من النقرات.",

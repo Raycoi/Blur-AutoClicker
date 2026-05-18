@@ -159,6 +159,8 @@
     "customStopZoneDescription": "עוצר את הלוחץ כשהסמן נכנס לאזור המלבני הזה, לפי קואורדינטות מסך מוחלטות שיכולות להתפרס על כמה מסכים.",
     "customStopZoneSetTopLeft": "הגדר פינה שמאלית-עליונה",
     "customStopZoneSetBottomRight": "הגדר פינה ימנית-תחתונה",
+    "customStopZoneDraw": "צייר אזור",
+    "customStopZoneCancelDrawing": "בטל ציור",
     "speedVariationUnavailable": "הפעל שינויי מהירות כדי לערוך עד כמה האפליקציה משנה אקראית את תזמון הלחיצות.",
     "doubleClickUnavailable": "לחיצה כפולה לא זמינה ב-{cps} לחיצות לשנייה. הורד את קצב הלחיצות האפקטיבי מתחת ל-50 לחיצות לשנייה כדי להפעיל אותה.",
     "clickLimitUnavailable": "הפעל מגבלת לחיצות כדי לעצור אוטומטית לאחר מספר לחיצות מוגדר.",
