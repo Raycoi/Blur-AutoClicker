@@ -5,7 +5,8 @@
     "fr": "Français",
     "ar": "العربية",
     "de": "Deutsch",
-    "he": "עברית"
+    "he": "עברית",
+    "cn": "简体中文"
   },
   "common": {
     "on": "On",
@@ -173,7 +174,8 @@
     "pickCountdownUnavailable": "Position capture starts in {seconds} seconds. Move your cursor to the target spot and wait for it to be saved.",
     "pickCountdownSingularUnavailable": "Position capture starts in 1 second. Move your cursor to the target spot and wait for it to be saved.",
     "customStopZoneAddingIn": "Setting in",
-    "customStopZoneCapturing": "Setting..."
+    "customStopZoneCapturing": "Setting...",
+    "perClick": "Per Click"
   },
   "options": {
     "interval": {
@@ -202,6 +204,20 @@
       "Middle": "Middle Click",
       "Right": "Right Click"
     },
+    "inputType": {
+      "mouse": "Mouse",
+      "keyboard": "Key"
+    },
+    "rateInputMode": {
+      "rate": "Rate",
+      "duration": "Delay"
+    },
+    "timeUnits": {
+      "h": "h",
+      "m": "m",
+      "s": "s",
+      "ms": "ms"
+    },
     "timeUnitShort": {
       "s": "s",
       "m": "m",
@@ -210,7 +226,10 @@
   },
   "hotkey": {
     "pressKeys": "Press keys...",
+    "pressKey": "Press a key...",
     "empty": "Click and press keys",
+    "selectKey": "Select key",
+    "rightClickToClear": "Right click input to clear",
     "key": {
       "up": "Up",
       "down": "Down",
