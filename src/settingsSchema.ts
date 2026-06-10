@@ -19,6 +19,91 @@ export interface SequencePoint {
   clicks: number;
 }
 
+function createSequencePointId(): string {
+  return (
+    globalThis.crypto?.randomUUID?.() ??
+    `seq-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  );
+}
+
+export interface PresetSnapshot {
+  clickSpeed: number;
+  clickInterval: ClickInterval;
+  inputType: InputType;
+  keyboardKey: string;
+  keyboardKeyCase: KeyboardKeyCase;
+  mouseButton: MouseButton;
+  mode: ClickMode;
+  dutyCycleEnabled: boolean;
+  dutyCycle: number;
+  speedVariationEnabled: boolean;
+  speedVariation: number;
+  doubleClickEnabled: boolean;
+  doubleClickDelay: number;
+  clickLimitEnabled: boolean;
+  clickLimit: number;
+  timeLimitEnabled: boolean;
+  timeLimit: number;
+  timeLimitUnit: TimeLimitUnit;
+  cornerStopEnabled: boolean;
+  cornerStopTL: number;
+  cornerStopTR: number;
+  cornerStopBL: number;
+  cornerStopBR: number;
+  edgeStopEnabled: boolean;
+  edgeStopTop: number;
+  edgeStopBottom: number;
+  edgeStopLeft: number;
+  edgeStopRight: number;
+  sequenceEnabled: boolean;
+  sequencePoints: SequencePoint[];
+}
+
+export interface PresetDefinition {
+  id: PresetId;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  settings: PresetSnapshot;
+}
+
+export function getMaxClickSpeed(extended: boolean): number {
+  return extended ? 1000 : SETTINGS_LIMITS.clickSpeed.max;
+}
+
+export interface Settings extends PresetSnapshot {
+  version: string;
+  hotkey: string;
+  language: Language;
+  rateInputMode: RateInputMode;
+  durationHours: number;
+  durationMinutes: number;
+  durationSeconds: number;
+  durationMilliseconds: number;
+  customStopZoneEnabled: boolean;
+  customStopZoneX: number;
+  customStopZoneY: number;
+  customStopZoneWidth: number;
+  customStopZoneHeight: number;
+  disableScreenshots: boolean;
+  advancedSettingsEnabled: boolean;
+  lastPanel: SavedPanel;
+  showStopReason: boolean;
+  showStopOverlay: boolean;
+  strictHotkeyModifiers: boolean;
+  inputType: InputType;
+  keyboardKey: string;
+  keyboardKeyCase: KeyboardKeyCase;
+  minimizeToTray: boolean;
+  theme: Theme;
+  advancedSequenceLayout: AdvancedSequenceLayout;
+  alwaysOnTop: boolean;
+  accentColor: string;
+  presets: PresetDefinition[];
+  extendedClickSpeedLimit: boolean;
+  activePresetId: PresetId | null;
+}
+
 export const DEFAULT_ACCENT_COLOR = "#22c55e";
 export const MAX_PRESETS = 20;
 export const PRESET_NAME_MAX_LENGTH = 40;
@@ -582,8 +667,62 @@ function sanitizeSequencePoints(value: unknown): SequencePoint[] {
 export function createDefaultSettings(version: string): Settings {
   return {
     version,
-    ...PRESET_DEFAULTS,
-    ...SETTINGS_ONLY_DEFAULTS,
+    clickSpeed: 25,
+    clickInterval: "s",
+    mouseButton: "Left",
+    hotkey: "ctrl+y",
+    language: DEFAULT_LANGUAGE,
+    mode: "Toggle",
+    dutyCycleEnabled: true,
+    dutyCycle: 45,
+    speedVariationEnabled: true,
+    speedVariation: 35,
+    doubleClickEnabled: false,
+    doubleClickDelay: 40,
+    clickLimitEnabled: false,
+    clickLimit: 1000,
+    timeLimitEnabled: false,
+    timeLimit: 60,
+    timeLimitUnit: "s",
+    cornerStopEnabled: true,
+    cornerStopTL: 50,
+    cornerStopTR: 50,
+    cornerStopBL: 50,
+    cornerStopBR: 50,
+    edgeStopEnabled: true,
+    edgeStopTop: 40,
+    edgeStopBottom: 40,
+    edgeStopLeft: 40,
+    edgeStopRight: 40,
+    rateInputMode: "rate",
+    durationHours: 0,
+    durationMinutes: 0,
+    durationSeconds: 0,
+    durationMilliseconds: 40,
+    sequenceEnabled: false,
+    sequencePoints: [],
+    customStopZoneEnabled: false,
+    customStopZoneX: 0,
+    customStopZoneY: 0,
+    customStopZoneWidth: 100,
+    customStopZoneHeight: 100,
+    disableScreenshots: false,
+    advancedSettingsEnabled: true,
+    lastPanel: "simple",
+    showStopReason: true,
+    showStopOverlay: true,
+    strictHotkeyModifiers: false,
+    inputType: "mouse" as const,
+    keyboardKey: "",
+    keyboardKeyCase: "lower",
+    minimizeToTray: false,
+    theme: "dark",
+    advancedSequenceLayout: "wide",
+    alwaysOnTop: false,
+    accentColor: DEFAULT_ACCENT_COLOR,
+    presets: [],
+    extendedClickSpeedLimit: false,
+  activePresetId: null,
   };
 }
 
@@ -795,7 +934,152 @@ export function sanitizeSettings(
 
   return {
     version,
-    ...presetSettings,
-    ...settingsOnly,
+    language: isLanguage(saved.language) ? saved.language : defaults.language,
+    clickSpeed: clampNumber(
+      saved.clickSpeed,
+      defaults.clickSpeed,
+      SETTINGS_LIMITS.clickSpeed.min,
+      SETTINGS_LIMITS.clickSpeed.max,
+    ),
+    dutyCycleEnabled: sanitizeBoolean(
+      saved.dutyCycleEnabled,
+      defaults.dutyCycleEnabled,
+    ),
+    dutyCycle: clampNumber(
+      saved.dutyCycle,
+      defaults.dutyCycle,
+      SETTINGS_LIMITS.dutyCycle.min,
+      SETTINGS_LIMITS.dutyCycle.max,
+    ),
+    speedVariationEnabled: sanitizeBoolean(
+      saved.speedVariationEnabled,
+      defaults.speedVariationEnabled,
+    ),
+    speedVariation: clampNumber(
+      saved.speedVariation,
+      legacySpeedVariation,
+      SETTINGS_LIMITS.speedVariation.min,
+      SETTINGS_LIMITS.speedVariation.max,
+    ),
+    doubleClickEnabled: sanitizeBoolean(
+      saved.doubleClickEnabled,
+      defaults.doubleClickEnabled,
+    ),
+    doubleClickDelay: clampNumber(
+      saved.doubleClickDelay,
+      defaults.doubleClickDelay,
+      SETTINGS_LIMITS.doubleClickDelay.min,
+      SETTINGS_LIMITS.doubleClickDelay.max,
+    ),
+    clickLimitEnabled: sanitizeBoolean(
+      saved.clickLimitEnabled,
+      defaults.clickLimitEnabled,
+    ),
+    clickLimit: clampNumber(
+      saved.clickLimit,
+      defaults.clickLimit,
+      SETTINGS_LIMITS.clickLimit.min,
+      SETTINGS_LIMITS.clickLimit.max,
+    ),
+    timeLimitEnabled: sanitizeBoolean(
+      saved.timeLimitEnabled,
+      defaults.timeLimitEnabled,
+    ),
+    timeLimit: clampNumber(
+      saved.timeLimit,
+      defaults.timeLimit,
+      SETTINGS_LIMITS.timeLimit.min,
+    ),
+    cornerStopEnabled: sanitizeBoolean(
+      saved.cornerStopEnabled,
+      defaults.cornerStopEnabled,
+    ),
+    cornerStopTL: clampNumber(
+      saved.cornerStopTL,
+      defaults.cornerStopTL,
+      SETTINGS_LIMITS.stopBoundary.min,
+      SETTINGS_LIMITS.stopBoundary.max,
+    ),
+    cornerStopTR: clampNumber(
+      saved.cornerStopTR,
+      defaults.cornerStopTR,
+      SETTINGS_LIMITS.stopBoundary.min,
+      SETTINGS_LIMITS.stopBoundary.max,
+    ),
+    cornerStopBL: clampNumber(
+      saved.cornerStopBL,
+      defaults.cornerStopBL,
+      SETTINGS_LIMITS.stopBoundary.min,
+      SETTINGS_LIMITS.stopBoundary.max,
+    ),
+    cornerStopBR: clampNumber(
+      saved.cornerStopBR,
+      defaults.cornerStopBR,
+      SETTINGS_LIMITS.stopBoundary.min,
+      SETTINGS_LIMITS.stopBoundary.max,
+    ),
+    edgeStopEnabled: sanitizeBoolean(
+      saved.edgeStopEnabled,
+      defaults.edgeStopEnabled,
+    ),
+    edgeStopTop: clampNumber(
+      saved.edgeStopTop,
+      defaults.edgeStopTop,
+      SETTINGS_LIMITS.stopBoundary.min,
+      SETTINGS_LIMITS.stopBoundary.max,
+    ),
+    edgeStopBottom: clampNumber(
+      saved.edgeStopBottom,
+      defaults.edgeStopBottom,
+      SETTINGS_LIMITS.stopBoundary.min,
+      SETTINGS_LIMITS.stopBoundary.max,
+    ),
+    edgeStopLeft: clampNumber(
+      saved.edgeStopLeft,
+      defaults.edgeStopLeft,
+      SETTINGS_LIMITS.stopBoundary.min,
+      SETTINGS_LIMITS.stopBoundary.max,
+    ),
+    edgeStopRight: clampNumber(
+      saved.edgeStopRight,
+      defaults.edgeStopRight,
+      SETTINGS_LIMITS.stopBoundary.min,
+      SETTINGS_LIMITS.stopBoundary.max,
+    ),
+    rateInputMode: sanitizeRateInputMode(saved.rateInputMode),
+    durationHours: clampNumber(saved.durationHours, defaults.durationHours, SETTINGS_LIMITS.durationHours.min, SETTINGS_LIMITS.durationHours.max),
+    durationMinutes: clampNumber(saved.durationMinutes, defaults.durationMinutes, SETTINGS_LIMITS.durationMinutes.min),
+    durationSeconds: clampNumber(saved.durationSeconds, defaults.durationSeconds, SETTINGS_LIMITS.durationSeconds.min, SETTINGS_LIMITS.durationSeconds.max),
+    durationMilliseconds: clampNumber(saved.durationMilliseconds, defaults.durationMilliseconds, SETTINGS_LIMITS.durationMilliseconds.min, SETTINGS_LIMITS.durationMilliseconds.max),
+    sequenceEnabled,
+    sequencePoints: sanitizeSequencePoints(saved.sequencePoints),
+    customStopZoneEnabled: sanitizeBoolean(saved.customStopZoneEnabled, defaults.customStopZoneEnabled),
+    customStopZoneX: clampNumber(saved.customStopZoneX, defaults.customStopZoneX),
+    customStopZoneY: clampNumber(saved.customStopZoneY, defaults.customStopZoneY),
+    customStopZoneWidth: clampNumber(saved.customStopZoneWidth, defaults.customStopZoneWidth, SETTINGS_LIMITS.stopZoneDimension.min),
+    customStopZoneHeight: clampNumber(saved.customStopZoneHeight, defaults.customStopZoneHeight, SETTINGS_LIMITS.stopZoneDimension.min),
+    disableScreenshots: false,
+    lastPanel: sanitizeSavedPanel(saved.lastPanel),
+    theme: sanitizeTheme(saved.theme),
+    advancedSequenceLayout: sanitizeAdvancedSequenceLayout(
+      saved.advancedSequenceLayout,
+    ),
+    strictHotkeyModifiers: sanitizeBoolean(saved.strictHotkeyModifiers, defaults.strictHotkeyModifiers),
+    inputType: saved.inputType === "keyboard" ? "keyboard" : "mouse",
+    keyboardKey: typeof saved.keyboardKey === "string" ? saved.keyboardKey : "",
+    keyboardKeyCase: saved.keyboardKeyCase === "upper" ? "upper" : "lower",
+    minimizeToTray: sanitizeBoolean(saved.minimizeToTray, defaults.minimizeToTray),
+    alwaysOnTop: sanitizeBoolean(saved.alwaysOnTop, defaults.alwaysOnTop),
+    accentColor: sanitizeHexColor(saved.accentColor, defaults.accentColor),
+    presets,
+    extendedClickSpeedLimit: sanitizeBoolean(
+      saved.extendedClickSpeedLimit,
+      defaults.extendedClickSpeedLimit,
+    ),
+    activePresetId:
+      typeof saved.activePresetId === "string" &&
+      presets.some((preset) => preset.id === saved.activePresetId)
+        ? saved.activePresetId
+        : null,
   };
 }
