@@ -67,6 +67,10 @@ export interface PresetDefinition {
   settings: PresetSnapshot;
 }
 
+export function getMaxClickSpeed(extended: boolean): number {
+  return extended ? 1000 : SETTINGS_LIMITS.clickSpeed.max;
+}
+
 export interface Settings extends PresetSnapshot {
   version: string;
   hotkey: string;
@@ -96,6 +100,7 @@ export interface Settings extends PresetSnapshot {
   alwaysOnTop: boolean;
   accentColor: string;
   presets: PresetDefinition[];
+  extendedClickSpeedLimit: boolean;
   activePresetId: PresetId | null;
 }
 
@@ -267,7 +272,8 @@ export function createDefaultSettings(version: string): Settings {
     alwaysOnTop: false,
     accentColor: DEFAULT_ACCENT_COLOR,
     presets: [],
-    activePresetId: null,
+    extendedClickSpeedLimit: false,
+  activePresetId: null,
   };
 }
 
@@ -727,6 +733,10 @@ export function sanitizeSettings(
     alwaysOnTop: sanitizeBoolean(saved.alwaysOnTop, defaults.alwaysOnTop),
     accentColor: sanitizeHexColor(saved.accentColor, defaults.accentColor),
     presets,
+    extendedClickSpeedLimit: sanitizeBoolean(
+      saved.extendedClickSpeedLimit,
+      defaults.extendedClickSpeedLimit,
+    ),
     activePresetId:
       typeof saved.activePresetId === "string" &&
       presets.some((preset) => preset.id === saved.activePresetId)

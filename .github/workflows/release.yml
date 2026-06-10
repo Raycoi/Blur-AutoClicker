@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version tag (e.g., v3.7.0)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -16,6 +22,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve release tag
+        shell: pwsh
+        run: |
+          $tag = "${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}"
+          echo "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - uses: actions/setup-node@v4
         with:
@@ -40,8 +52,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: BlurAutoClicker ${{ github.ref_name }}
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseName: BlurAutoClicker ${{ env.RELEASE_TAG }}
           releaseBody: See CHANGELOG for details.
           releaseDraft: true
 
@@ -50,8 +62,7 @@ jobs:
         run: |
           $exe = Get-ChildItem -Path "src-tauri/target/release" -Filter "BlurAutoClicker.exe" | Select-Object -First 1
           if (-not $exe) { Write-Error "BlurAutoClicker.exe not found"; exit 1 }
-          $tag = "${{ github.ref_name }}"
-          $zipName = "BlurAutoClicker-${tag}-portable.zip"
+          $zipName = "BlurAutoClicker-$env:RELEASE_TAG-portable.zip"
           Compress-Archive -Path $exe.FullName -DestinationPath $zipName
           echo "ZIP_PATH=$zipName" >> $env:GITHUB_ENV
 
@@ -60,4 +71,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{ github.ref_name }}" "$env:ZIP_PATH" --clobber
+          gh release upload "$env:RELEASE_TAG" "$env:ZIP_PATH" --clobber
