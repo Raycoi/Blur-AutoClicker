@@ -16,6 +16,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "format:write": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "check": "cargo test --manifest-path src-tauri/Cargo.toml && npm test && npm run lint && npm run format:check && npm run frontend:build && cargo check --manifest-path src-tauri/Cargo.toml --locked && cargo clippy --manifest-path src-tauri/Cargo.toml && cargo fmt --manifest-path src-tauri/Cargo.toml --check && npm audit && node -e \"console.log('Tests ran:\\n- cargo test\\n- npm test\\n- eslint\\n- prettier\\n- frontend:build\\n- cargo check\\n- clippy\\n- fmt\\n- npm audit\\nAll passed!')\"",
+    "check:all": "npm run check",
     "fix": "cargo fmt --manifest-path src-tauri/Cargo.toml && npm run format:write && eslint --fix . && npm audit fix && node -e \"console.log('Fixed:\\n- cargo fmt\\n- prettier\\n- eslint\\n- npm audit fix\\nAll fixes applied!')\""
   },
   "dependencies": {
@@ -40,7 +41,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^9.39.4",
+    "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",

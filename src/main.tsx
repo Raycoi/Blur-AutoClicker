@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./App.tsx";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { installGlobalDiagnostics } from "./diagnostics";
+import { installZhCNLocalization } from "./localization/zhCN";
 
 document.addEventListener("contextmenu", (e) => e.preventDefault());
 
@@ -19,6 +20,7 @@ window.addEventListener(
 );
 
 installGlobalDiagnostics();
+installZhCNLocalization();
 
 createRoot(document.getElementById("root")!, {
   onCaughtError: (err, errorInfo) => {
